@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            palodding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            padding: 20px 30px;
+            color: white;
+            position: relative;
+        }
+
+        .nav {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .theme-icon {
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item {
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active, .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .project-tree {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .tree-item {
+            margin-bottom: 8px;
+        }
+
+        .tree-node {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tree-node:hover {
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+        .tree-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .folder-icon {
+            font-size: 18px;
+            color: #3b82f6;
+        }
+
+        .project-name {
+            flex: 1;
+            font-weight: 500;
+            font-size: 16px;
+            color: #1e293b;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-left: 10px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .avatar:hover {
+            border-color: #3b82f6;
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            width: 120px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-left: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .progress-complete { background: linear-gradient(90deg, #10b981, #059669); }
+        .progress-partial { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+        .progress-warning { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .progress-danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+        .children {
+            margin-left: 30px;
+            border-left: 2px solid #e2e8f0;
+            padding-left: 15px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .children.expanded {
+            max-height: 2000px;
+            opacity: 1;
+            margin-top: 8px;
+        }
+
+        .progress-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            height: fit-content;
+        }
+
+        .progress-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .overall-progress {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .progress-number {
+            font-size: 72px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .overall-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .overall-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            border-radius: 6px;
+            width: 65%;
+            transition: width 1s ease;
+        }
+
+        .status-list {
+            margin-top: 30px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .status-on-track { background: #10b981; }
+        .status-at-risk { background: #f59e0b; }
+        .status-off-track { background: #ef4444; }
+
+        .status-percentage {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .expand-icon {
+            font-size: 12px;
+            color: #64748b;
+            transition: transform 0.3s ease;
+        }
+
+        .expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tree-item {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        /* Dark Theme Styles */
+        body.dark-theme {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .dark-theme .container {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .dark-theme .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .dark-theme .project-tree {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        .dark-theme .tree-node {
+            color: #e2e8f0;
+        }
+
+        .dark-theme .tree-node:hover {
+            background: #334155;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .dark-theme .project-name {
+            color: #f1f5f9;
+        }
+
+        .dark-theme .children {
+            border-color: #475569;
+        }
+
+        .dark-theme .progress-panel {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        .dark-theme .progress-title {
+            color: #f1f5f9;
+        }
+
+        .dark-theme .progress-bar {
+            background: #334155;
+        }
+
+        .dark-theme .overall-bar {
+            background: #334155;
+        }
+
+        .dark-theme .status-item {
+            border-color: #334155;
+        }
+
+        .dark-theme .status-label {
+            color: #cbd5e1;
+        }
+
+        .dark-theme .status-percentage {
+            color: #f1f5f9;
+        }
+
+        .dark-theme .avatar {
+            border-color: #475569;
+        }
+
+        .dark-theme .avatar:hover {
+            border-color: #3b82f6;
+        }
+
+        .dark-theme .expand-icon {
+            color: #94a3b8;
+        }
+
+        /* Theme transition animation */
+        *, *::before, *::after {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 4000px) {
+            .main-content {
+                grid-template-columns: 1fr 350px;
+            }
+            .nav-desktop{
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .nav {
+                gap: 20px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-item {
+                font-size: 16px;
+                white-space: nowrap;
+                padding: 8px 12px;
+            }
+
+            .theme-toggle {
+                right: 20px;
+                padding: 6px;
+            }
+
+            .theme-text {
+                display: none;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .project-tree {
+                order: 1;
+            }
+
+            .progress-panel {
+                order: 0;
+                margin-bottom: 10px;
+            }
+
+            .tree-node {
+                padding: 10px 12px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .project-name {
+                flex: 1;
+                min-width: 120px;
+                font-size: 15px;
+            }
+
+            .progress-bar {
+                width: 100px;
+                margin-left: 0;
+                order: 3;
+                flex-basis: 100%;
+            }
+
+            .avatar {
+                width: 28px;
+                height: 28px;
+                margin-left: 0;
+                order: 2;
+            }
+
+            .children {
+                margin-left: 20px;
+                padding-left: 10px;
+            }
+
+            .progress-number {
+                font-size: 48px;
+            }
+
+            .status-item {
+                padding: 12px 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 12px 15px;
+            }
+
+            .nav {
+                gap: 15px;
+            }
+
+            .nav-item {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+
+            .theme-toggle {
+                right: 15px;
+                padding: 5px;
+            }
+
+            .theme-icon {
+                font-size: 16px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .project-tree, .progress-panel {
+                padding: 20px;
+            }
+
+            .tree-node {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .project-name {
+                font-size: 14px;
+                min-width: 100px;
+            }
+
+            .progress-bar {
+                width: 80px;
+                height: 6px;
+            }
+
+            .avatar {
+                width: 24px;
+                height: 24px;
+            }
+
+            .children {
+                margin-left: 15px;
+                padding-left: 8px;
+            }
+
+            .progress-title {
+                font-size: 20px;
+            }
+
+            .progress-number {
+                font-size: 36px;
+            }
+
+            .status-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .status-percentage {
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .nav {
+                gap: 10px;
+            }
+
+            .nav-item {
+                font-size: 12px;
+                padding: 5px 8px;
+            }
+
+            .main-content {
+                padding: 10px;
+            }
+
+            .project-tree, .progress-panel {
+                padding: 15px;
+            }
+
+            .tree-node {
+                padding: 6px 8px;
+            }
+
+            .project-name {
+                min-width: 80px;
+            }
+
+            .progress-bar {
+                width: 60px;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 5px;
+                margin-right: 15px;
+            }
+
+            .nav-mobile {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                border-top: 1px solid rgba(255,255,255,0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                z-index: 1000;
+            }
+
+            .nav-mobile.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .nav-mobile .nav-item {
+                display: block;
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .nav-desktop {
+                display: none;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-toggle {
+                display: none;
+            }
+
+            .nav-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="nav">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="nav-desktop">
+                    <div class="nav-item active">Dashboard</div>
+                    <div class="nav-item" onclick="window.location.href = 'C:/Users/A2M/Downloads/project-management.html';">Projects</div>
+                    <div class="nav-item">Users</div>
+                    <div class="nav-item">Reports</div>
+                </div>
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <span class="theme-icon" id="themeIcon">🌙</span>
+                    <span class="theme-text" id="themeText">Dark</span>
+                </div>
+            </div>
+            <div class="nav-mobile" id="mobileNav">
+                <div class="nav-item active">Dashboard</div>
+                <div class="nav-item">Projects</div>
+                <div class="nav-item">Users</div>
+                <div class="nav-item">Reports</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="project-tree">
+                <div class="tree-item">
+                    <div class="tree-node" onclick="toggleNode(this)">
+                        <div class="tree-icon">
+                            <span class="expand-icon">▶</span>
+                        </div>
+                        <div class="folder-icon">📁</div>
+                        <div class="project-name">خانم استادزاده</div>
+                        <img src="https://i.pravatar.cc/32?img=1" alt="User Avatar" class="avatar">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-warning" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="children">
+                        <div class="tree-item">
+                            <div class="tree-node" onclick="toggleNode(this)">
+                                <div class="tree-icon">
+                                    <span class="expand-icon">▶</span>
+                                </div>
+                                <div class="folder-icon">📂</div>
+                                <div class="project-name">شرکت ایستاساز</div>
+                                <img src="https://i.pravatar.cc/32?img=2" alt="User Avatar" class="avatar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-partial" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div class="children">
+                                <div class="tree-item">
+                                    <div class="tree-node">
+                                        <div class="tree-icon"></div>
+                                        <div class="folder-icon">📄</div>
+                                        <div class="project-name">سال 1403</div>
+                                        <img src="https://i.pravatar.cc/32?img=3" alt="User Avatar" class="avatar">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill progress-complete" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-item">
+                                    <div class="tree-node">
+                                        <div class="tree-icon"></div>
+                                        <div class="folder-icon">📄</div>
+                                        <div class="project-name">سال 1404</div>
+                                        <img src="https://i.pravatar.cc/32?img=4" alt="User Avatar" class="avatar">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill progress-partial" style="width: 45%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tree-item">
+                    <div class="tree-node" onclick="toggleNode(this)">
+                        <div class="tree-icon">
+                            <span class="expand-icon">▶</span>
+                        </div>
+                        <div class="folder-icon">📁</div>
+                        <div class="project-name">خانم گودرزی</div>
+                        <img src="https://i.pravatar.cc/32?img=5" alt="User Avatar" class="avatar">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-warning" style="width: 55%"></div>
+                        </div>
+                    </div>
+                    <div class="children">
+                        <div class="tree-item">
+                            <div class="tree-node">
+                                <div class="tree-icon"></div>
+                                <div class="folder-icon">📂</div>
+                                <div class="project-name">شرکت امین</div>
+                                <img src="https://i.pravatar.cc/32?img=6" alt="User Avatar" class="avatar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-warning" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tree-item">
+                            <div class="tree-node">
+                                <div class="tree-icon"></div>
+                                <div class="folder-icon">📄</div>
+                                <div class="project-name">رسیدگی</div>
+                                <img src="https://i.pravatar.cc/32?img=7" alt="User Avatar" class="avatar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-danger" style="width: 25%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+<div class="tree-item">
+                    <div class="tree-node" onclick="toggleNode(this)">
+                        <div class="tree-icon">
+                            <span class="expand-icon">▶</span>
+                        </div>
+                        <div class="folder-icon">📁</div>
+                        <div class="project-name">خانم ابویی</div>
+                        <img src="https://i.pravatar.cc/32?img=18" alt="User Avatar" class="avatar">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-warning" style="width: 55%"></div>
+                        </div>
+                    </div>
+                    <div class="children">
+                        <div class="tree-item">
+                            <div class="tree-node">
+                                <div class="tree-icon"></div>
+                                <div class="folder-icon">📂</div>
+                                <div class="project-name">شرکت A2M</div>
+                                <img src="https://i.pravatar.cc/32?img=22" alt="User Avatar" class="avatar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-warning" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tree-item">
+                            <div class="tree-node">
+                                <div class="tree-icon"></div>
+                                <div class="folder-icon">📄</div>
+                                <div class="project-name">شرکت گادزا</div>
+                                <img src="https://i.pravatar.cc/32?img=12" alt="User Avatar" class="avatar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-danger" style="width: 25%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tree-item">
+                    <div class="tree-node" onclick="toggleNode(this)">
+                        <div class="tree-icon">
+                            <span class="expand-icon">▶</span>
+                        </div>
+                        <div class="folder-icon">📁</div>
+                        <div class="project-name">خانم فرخی</div>
+                        <img src="https://i.pravatar.cc/32?img=8" alt="User Avatar" class="avatar">
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-complete" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="children">
+                        <div class="tree-item">
+                            <div class="tree-node">
+                                <div class="tree-icon"></div>
+                                <div class="folder-icon">📂</div>
+                                <div class="project-name">شرکت دارویی شاملو</div>
+                                <img src="https://i.pravatar.cc/32?img=9" alt="User Avatar" class="avatar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-complete" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tree-item">
+                            <div class="tree-node" onclick="toggleNode(this)">
+                                <div class="tree-icon">
+                                    <span class="expand-icon">▶</span>
+                                </div>
+                                <div class="folder-icon">📂</div>
+                                <div class="project-name">شرکت فرحزاد</div>
+                                <img src="https://i.pravatar.cc/32?img=10" alt="User Avatar" class="avatar">
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-complete" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            <div class="children">
+                                <div class="tree-item">
+                                    <div class="tree-node">
+                                        <div class="tree-icon"></div>
+                                        <div class="folder-icon">📄</div>
+                                        <div class="project-name">سال 1403</div>
+                                        <img src="https://i.pravatar.cc/32?img=11" alt="User Avatar" class="avatar">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill progress-complete" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-item">
+                                    <div class="tree-node">
+                                        <div class="tree-icon"></div>
+                                        <div class="folder-icon">📄</div>
+                                        <div class="project-name">سال 1404</div>
+                                        <img src="https://i.pravatar.cc/32?img=12" alt="User Avatar" class="avatar">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill progress-partial" style="width: 70%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-panel">
+                <div class="progress-title">Progress</div>
+                <div class="overall-progress">
+                    <div class="progress-number">82%</div>
+                    <div class="overall-bar">
+                        <div class="overall-fill"></div>
+                    </div>
+                </div>
+
+                <div class="status-list">
+                    <div class="status-item">
+                        <div class="status-label">
+                            <div class="status-dot status-on-track"></div>
+                            On track
+                        </div>
+                        <div class="status-percentage">70%</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">
+                            <div class="status-dot status-at-risk"></div>
+                            At risk
+                        </div>
+                        <div class="status-percentage">10%</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">
+                            <div class="status-dot status-off-track"></div>
+                            Off track
+                        </div>
+                        <div class="status-percentage">23%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleNode(element) {
+            const children = element.nextElementSibling;
+            if (children && children.classList.contains('children')) {
+                const isExpanded = children.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    children.classList.remove('expanded');
+                    element.classList.remove('expanded');
+                } else {
+                    children.classList.add('expanded');
+                    element.classList.add('expanded');
+                }
+            }
+        }
+
+        function toggleMobileMenu() {
+            const mobileNav = document.getElementById('mobileNav');
+            mobileNav.classList.toggle('active');
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
+                // Note: localStorage removed for Claude.ai compatibility
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark';
+                // Note: localStorage removed for Claude.ai compatibility
+            }
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Note: localStorage functionality removed for Claude.ai compatibility
+            // You can re-add localStorage in your ASP.NET implementation
+            
+            const treeItems = document.querySelectorAll('.tree-item');
+            treeItems.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.1}s`;
+            });
+
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(e) {
+                const mobileNav = document.getElementById('mobileNav');
+                const menuToggle = document.querySelector('.mobile-menu-toggle');
+                
+                if (!mobileNav.contains(e.target) && !menuToggle.contains(e.target)) {
+                    mobileNav.classList.remove('active');
+                }
+            });
+
+            // Close mobile menu when window is resized to desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    document.getElementById('mobileNav').classList.remove('active');
+                }
+            });
+
+            // Animate progress bars
+            setTimeout(() => {
+                const progressFills = document.querySelectorAll('.progress-fill');
+                progressFills.forEach(fill => {
+                    const width = fill.style.width;
+                    fill.style.width = '0%';
+                    setTimeout(() => {
+                        fill.style.width = width;
+                    }, 100);
+                });
+
+                const overallFill = document.querySelector('.overall-fill');
+                overallFill.style.width = '0%';
+                setTimeout(() => {
+                    overallFill.style.width = '82%';
+                }, 500);
+            }, 800);
+        });
+
+        // Add click animations
+        document.querySelectorAll('.tree-node').forEach(node => {
+            node.addEventListener('click', function(e) {
+                if (!e.target.closest('.tree-icon')) return;
+                
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+    </script>
+</body>
+</html>
